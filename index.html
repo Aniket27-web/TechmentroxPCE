@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Powered Coding IDE</title>
+
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- Monaco Loader -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+</head>
+<body>
+
+  <header>
+    <h2>⚡ AI-Powered Coding IDE</h2>
+  </header>
+
+  <div class="toolbar">
+    <button id="generate">Generate</button>
+    <button id="explain">Explain</button>
+    <button id="debug">Debug</button>
+    <button id="optimize">Optimize</button>
+  </div>
+
+  <div id="container">
+    <div id="editor"></div>
+    <div id="output">
+      <h3>AI Output</h3>
+      <pre id="result"></pre>
+    </div>
+  </div>
+
+  <!-- App Scripts -->
+  <script src="js/editor.js"></script>
+  <script src="js/aiService.js"></script>
+  <script src="js/actions.js"></script>
+  <script src="js/main.js"></script>
+
+</body>
+</html>
