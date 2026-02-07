@@ -24,13 +24,27 @@ class EditorManager {
                 return;
             }
 
-            require.config({ paths: { vs: 'https://unpkg.com/monaco-editor@0.44.0/min/vs' } });
-            
-            require(['vs/editor/editor.main'], function () {
-                resolve();
-            }, function (error) {
-                reject(error);
-            });
+           let editor;
+
+require.config({
+  paths: { vs: "https://unpkg.com/monaco-editor@0.44.0/min/vs" }
+});
+
+require(["vs/editor/editor.main"], function () {
+  editor = monaco.editor.create(
+    document.getElementById("monaco-editor"),
+    {
+      value: "console.log('Hello World');",
+      language: "javascript",
+      theme: "vs-dark",
+      automaticLayout: true
+    }
+  );
+
+  // 🔥 THIS LINE IS CRITICAL
+  window.editor = editor;
+});
+
         });
     }
 
