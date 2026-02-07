@@ -1,292 +1,85 @@
+// aiService.js
+// =============================
+// Simple AI Service (No Popup)
+// API Key is hardcoded by default
+// =============================
+
 class AIService {
     constructor() {
-        this.apiKey = null;
-        this.baseURL = 'https://api.openai.com/v1';
-        this.model = 'gpt-3.5-turbo';
+        // 🔴 ADD YOUR API KEY HERE
+        this.apiKey = "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";
+
+        // OpenAI config
+        this.baseURL = "https://api.openai.com/v1/chat/completions";
+        this.model = "gpt-4o-mini";
         this.maxTokens = 2000;
         this.temperature = 0.7;
-        this.init();
     }
 
-    init() {
-        // Try to load API key from localStorage
-        this.apiKey = localStorage.getItem('ai-api-key');
-        
-        if (!this.apiKey) {
-            this.showApiKeyDialog();
+    async makeRequest(prompt) {
+        if (!this.apiKey || this.apiKey === "PASTE_YOUR_API_KEY_HERE") {
+            throw new Error("OpenAI API key is missing in aiService.js");
         }
-    }
 
-    showApiKeyDialog() {
-        const modal = document.createElement('div');
-        modal.className = 'api-key-modal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <h3>Enter Your OpenAI API Key</h3>
-                <p>To use AI features, please enter your OpenAI API key.</p>
-                <input type="password" id="api-key-input" placeholder="sk-..." />
-                <div class="modal-buttons">
-                    <button id="save-api-key" class="btn btn-primary">Save</button>
-                    <button id="skip-api-key" class="btn btn-secondary">Skip</button>
-                </div>
-                <p class="api-key-info">
-                    Your API key will be stored locally in your browser only.
-                    <a href="https://platform.openai.com/api-keys" target="_blank">Get your API key here</a>
-                </p>
-            </div>
-        `;
-
-        // Add modal styles
-        const style = document.createElement('style');
-        style.textContent = `
-            .api-key-modal {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(0, 0, 0, 0.8);
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                z-index: 10000;
-            }
-            
-            .modal-content {
-                background: white;
-                padding: 30px;
-                border-radius: 8px;
-                max-width: 400px;
-                width: 90%;
-                text-align: center;
-            }
-            
-            .modal-content h3 {
-                margin-bottom: 15px;
-                color: #333;
-            }
-            
-            .modal-content p {
-                margin-bottom: 20px;
-                color: #666;
-            }
-            
-            #api-key-input {
-                width: 100%;
-                padding: 10px;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                margin-bottom: 20px;
-                font-size: 14px;
-            }
-            
-            .modal-buttons {
-                display: flex;
-                gap: 10px;
-                justify-content: center;
-                margin-bottom: 15px;
-            }
-            
-            .api-key-info {
-                font-size: 12px;
-                color: #888;
-            }
-            
-            .api-key-info a {
-                color: #007acc;
-                text-decoration: none;
-            }
-            
-            .api-key-info a:hover {
-                text-decoration: underline;
-            }
-        `;
-        document.head.appendChild(style);
-        document.body.appendChild(modal);
-
-        // Handle modal events
-        document.getElementById('save-api-key').addEventListener('click', () => {
-            const apiKey = document.getElementById('api-key-input').value.trim();
-            if (apiKey) {
-                this.setApiKey(apiKey);
-                document.body.removeChild(modal);
-                document.head.removeChild(style);
-            } else {
-                alert('Please enter a valid API key');
-            }
+        const response = await fetch(this.baseURL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${this.apiKey}`
+            },
+            body: JSON.stringify({
+                model: this.model,
+                messages: [
+                    {
+                        role: "system",
+                        content:
+                            "You are a helpful AI coding assistant. Provide clear, concise, and accurate answers."
+                    },
+                    {
+                        role: "user",
+                        content: prompt
+                    }
+                ],
+                max_tokens: this.maxTokens,
+                temperature: this.temperature
+            })
         });
 
-        document.getElementById('skip-api-key').addEventListener('click', () => {
-            document.body.removeChild(modal);
-            document.head.removeChild(style);
-        });
-
-        // Handle Enter key in input
-        document.getElementById('api-key-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                document.getElementById('save-api-key').click();
-            }
-        });
-    }
-
-    setApiKey(apiKey) {
-        this.apiKey = apiKey;
-        localStorage.setItem('ai-api-key', apiKey);
-    }
-
-    async makeRequest(prompt, code = '', language = '') {
-        if (!this.apiKey) {
-            throw new Error('API key not set. Please set your OpenAI API key.');
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error?.message || "OpenAI API error");
         }
 
-        const fullPrompt = this.buildPrompt(prompt, code, language);
-
-        try {
-            const response = await fetch(`${this.baseURL}/chat/completions`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.apiKey}`
-                },
-                body: JSON.stringify({
-                    model: this.model,
-                    messages: [
-                        {
-                            role: 'system',
-                            content: 'You are a helpful AI coding assistant. Provide clear, concise, and accurate coding help. When providing code examples, use proper formatting and explain your reasoning.'
-                        },
-                        {
-                            role: 'user',
-                            content: fullPrompt
-                        }
-                    ],
-                    max_tokens: this.maxTokens,
-                    temperature: this.temperature
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`API Error: ${errorData.error?.message || response.statusText}`);
-            }
-
-            const data = await response.json();
-            return data.choices[0].message.content;
-
-        } catch (error) {
-            console.error('AI Service Error:', error);
-            throw error;
-        }
+        const data = await response.json();
+        return data.choices[0].message.content;
     }
 
-    buildPrompt(action, code, language) {
-        const prompts = {
-            explain: `Please explain the following ${language} code in detail. Explain what each part does, the overall purpose, and any important concepts or patterns used:\n\n\`\`\`${language}\n${code}\n\`\`\``,
-            
-            debug: `Please analyze the following ${language} code for bugs, errors, or potential issues. Identify any problems and suggest fixes:\n\n\`\`\`${language}\n${code}\n\`\`\``,
-            
-            generate: `Generate ${language} code based on this request:\n\n${code}\n\nPlease provide complete, working code with proper formatting and comments where necessary.`,
-            
-            optimize: `Please optimize the following ${language} code for better performance, readability, and best practices. Suggest improvements and provide the optimized version:\n\n\`\`\`${language}\n${code}\n\`\`\``,
-            
-            custom: `${code}`
-        };
+    // -------- Feature Helpers --------
 
-        return prompts[action] || prompts.custom;
+    explainCode(code, language) {
+        return this.makeRequest(
+            `Explain the following ${language} code clearly:\n\n${code}`
+        );
     }
 
-    async explainCode(code, language) {
-        try {
-            return await this.makeRequest('explain', code, language);
-        } catch (error) {
-            throw new Error(`Failed to explain code: ${error.message}`);
-        }
+    debugCode(code, language) {
+        return this.makeRequest(
+            `Find bugs and fix the following ${language} code:\n\n${code}`
+        );
     }
 
-    async debugCode(code, language) {
-        try {
-            return await this.makeRequest('debug', code, language);
-        } catch (error) {
-            throw new Error(`Failed to debug code: ${error.message}`);
-        }
+    optimizeCode(code, language) {
+        return this.makeRequest(
+            `Optimize the following ${language} code for performance and readability:\n\n${code}`
+        );
     }
 
-    async generateCode(prompt, language) {
-        try {
-            return await this.makeRequest('generate', prompt, language);
-        } catch (error) {
-            throw new Error(`Failed to generate code: ${error.message}`);
-        }
-    }
-
-    async optimizeCode(code, language) {
-        try {
-            return await this.makeRequest('optimize', code, language);
-        } catch (error) {
-            throw new Error(`Failed to optimize code: ${error.message}`);
-        }
-    }
-
-    async customPrompt(prompt, code, language) {
-        try {
-            const fullPrompt = code ? `${prompt}\n\nCode context:\n\`\`\`${language}\n${code}\n\`\`\`` : prompt;
-            return await this.makeRequest('custom', fullPrompt, language);
-        } catch (error) {
-            throw new Error(`Failed to process custom prompt: ${error.message}`);
-        }
-    }
-
-    updateSettings(settings) {
-        if (settings.model) this.model = settings.model;
-        if (settings.maxTokens) this.maxTokens = settings.maxTokens;
-        if (settings.temperature) this.temperature = settings.temperature;
-        if (settings.baseURL) this.baseURL = settings.baseURL;
-    }
-
-    getSettings() {
-        return {
-            model: this.model,
-            maxTokens: this.maxTokens,
-            temperature: this.temperature,
-            baseURL: this.baseURL,
-            hasApiKey: !!this.apiKey
-        };
-    }
-
-    clearApiKey() {
-        this.apiKey = null;
-        localStorage.removeItem('ai-api-key');
-    }
-
-    // Helper method to format AI responses
-    formatResponse(response) {
-        // Code block formatting
-        response = response.replace(/```(\w+)?\n/g, '<pre><code class="language-$1">');
-        response = response.replace(/```/g, '</code></pre>');
-        
-        // Bold text
-        response = response.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        
-        // Italic text
-        response = response.replace(/\*(.*?)\*/g, '<em>$1</em>');
-        
-        // Line breaks
-        response = response.replace(/\n\n/g, '</p><p>');
-        response = response.replace(/\n/g, '<br>');
-        
-        // Wrap in paragraphs
-        if (!response.startsWith('<p>')) {
-            response = '<p>' + response + '</p>';
-        }
-        
-        return response;
-    }
-
-    // Method to check if service is ready
-    isReady() {
-        return !!this.apiKey;
+    generateCode(prompt, language) {
+        return this.makeRequest(
+            `Generate ${language} code for the following request:\n\n${prompt}`
+        );
     }
 }
 
-// Export for use in other modules
+// Make globally available
 window.AIService = AIService;
