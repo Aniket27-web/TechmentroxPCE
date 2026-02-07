@@ -147,6 +147,21 @@ body.dark-theme .editor-toolbar {
     flex: 1;
     min-height: 0;
 }
+.output-console {
+    background: #0f172a;
+    color: #e5e7eb;
+    padding: 10px;
+    margin-top: 10px;
+    height: 150px;
+    overflow-y: auto;
+    border-top: 2px solid #22c55e;
+}
+
+.output-console pre {
+    margin: 0;
+    color: #22c55e;
+    font-family: monospace;
+}
 
 /* Sidebar */
 .sidebar {
