@@ -35,23 +35,15 @@
                 <div class="editor-actions">
                     <button id="new-file" class="btn btn-secondary">New File</button>
                     <button id="save-file" class="btn btn-secondary">Save</button>
-                    <button id="run-code" class="btn btn-success">▶ Run</button>
                 </div>
             </div>
             <div id="monaco-editor" class="monaco-editor"></div>
-            <div class="output-console">
-                <h3>Output</h3>
-                <pre id="run-output">// Program output will appear here</pre>
-            </div>
-
         </section>
 
         <aside class="sidebar">
             <div class="ai-actions">
                 <h3>AI Assistant</h3>
                 <div class="action-buttons">
-                    <button id="run-code" class="btn btn-success">▶ Run</button>
-                    
                     <button id="explain-btn" class="btn btn-primary" data-action="explain">
                         📖 Explain
                     </button>
@@ -96,7 +88,7 @@
     </main>
 
     <footer class="footer">
-        <p>AI-Powered Coding IDE © 2024 | Built with Monaco Editor & AI</p>
+        <p>AI-Powered Coding IDE © 2024 | Built with Monaco Editor & Groq AI</p>
     </footer>
 
     <div id="loading-overlay" class="loading-overlay hidden">
@@ -105,7 +97,9 @@
     </div>
 
     <script src="js/editor.js"></script>
-    <script src="js/aiService.js"></script>
+    <script src="js/aiService-groq.js"></script>
+    <script src="js/simpleExecutor.js"></script>
+    <script src="js/terminal.js"></script>
     <script src="js/actions.js"></script>
     <script src="js/main.js"></script>
 </body>
