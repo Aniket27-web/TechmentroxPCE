@@ -445,3 +445,33 @@ class ActionManager {
 
 // Export for use in other modules
 window.ActionManager = ActionManager;
+function runCode() {
+    const output = document.getElementById("run-output");
+    output.textContent = "";
+
+    const language = document.getElementById("language-select").value;
+    const code = window.editor.getValue();
+
+    if (language !== "javascript") {
+        output.textContent =
+            "⚠️ Code execution supported only for JavaScript in browser.\n" +
+            "Other languages require backend execution.";
+        return;
+    }
+
+    // Capture console.log
+    const originalLog = console.log;
+    console.log = (...args) => {
+        output.textContent += args.join(" ") + "\n";
+        originalLog(...args);
+    };
+
+    try {
+        new Function(code)(); // RUN JS CODE
+    } catch (err) {
+        output.textContent += "❌ Error: " + err.message;
+    }
+
+    console.log = originalLog;
+}
+
