@@ -147,21 +147,6 @@ body.dark-theme .editor-toolbar {
     flex: 1;
     min-height: 0;
 }
-.output-console {
-    background: #0f172a;
-    color: #e5e7eb;
-    padding: 10px;
-    margin-top: 10px;
-    height: 150px;
-    overflow-y: auto;
-    border-top: 2px solid #22c55e;
-}
-
-.output-console pre {
-    margin: 0;
-    color: #22c55e;
-    font-family: monospace;
-}
 
 /* Sidebar */
 .sidebar {
@@ -429,7 +414,233 @@ body.dark-theme .footer {
     }
 }
 
-/* Scrollbar Styling */
+.btn-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    transform: translateY(-1px);
+}
+
+/* Terminal Styles */
+.terminal-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 300px;
+    background-color: #1e1e1e;
+    border-top: 1px solid #3e3e42;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    z-index: 1000;
+    transition: transform 0.3s ease;
+}
+
+.terminal-container.hidden {
+    transform: translateY(100%);
+}
+
+.terminal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: #2d2d30;
+    border-bottom: 1px solid #3e3e42;
+    cursor: pointer;
+}
+
+.terminal-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.terminal-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.terminal-dot.red {
+    background-color: #ff5f56;
+}
+
+.terminal-dot.yellow {
+    background-color: #ffbd2e;
+}
+
+.terminal-dot.green {
+    background-color: #27c93f;
+}
+
+.terminal-name {
+    color: #cccccc;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.terminal-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.terminal-body {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    background-color: #1e1e1e;
+    color: #cccccc;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.terminal-output {
+    margin-bottom: 8px;
+}
+
+.terminal-line {
+    margin-bottom: 4px;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.terminal-line.command {
+    color: #cccccc;
+}
+
+.terminal-line.output {
+    color: #cccccc;
+}
+
+.terminal-line.success {
+    color: #4ec9b0;
+}
+
+.terminal-line.error {
+    color: #f44747;
+}
+
+.terminal-line.warning {
+    color: #ffcc02;
+}
+
+.terminal-line.info {
+    color: #3794ff;
+}
+
+.terminal-input-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.terminal-prompt {
+    color: #4ec9b0;
+    font-weight: bold;
+    user-select: none;
+}
+
+.terminal-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #cccccc;
+    font-family: inherit;
+    font-size: inherit;
+    outline: none;
+}
+
+.terminal-input::selection {
+    background-color: #264f78;
+}
+
+/* Terminal scrollbar */
+.terminal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.terminal-body::-webkit-scrollbar-track {
+    background: #1e1e1e;
+}
+
+.terminal-body::-webkit-scrollbar-thumb {
+    background: #3e3e42;
+    border-radius: 4px;
+}
+
+.terminal-body::-webkit-scrollbar-thumb:hover {
+    background: #4e4e52;
+}
+
+/* Adjust main container for terminal */
+.main-container {
+    display: flex;
+    height: calc(100vh - var(--header-height) - 300px);
+    margin-top: var(--header-height);
+    margin-bottom: 300px;
+}
+
+/* Terminal toggle button in editor */
+.terminal-toggle-btn {
+    position: fixed;
+    bottom: 310px;
+    right: 20px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px 4px 0 0;
+    cursor: pointer;
+    font-size: 12px;
+    z-index: 999;
+    transition: all 0.3s ease;
+}
+
+.terminal-toggle-btn:hover {
+    background-color: var(--secondary-color);
+}
+
+.terminal-toggle-btn.hidden {
+    bottom: 10px;
+    border-radius: 4px;
+}
+
+/* Dark theme terminal adjustments */
+body.dark-theme .terminal-container {
+    background-color: #1e1e1e;
+    border-top-color: #3e3e42;
+}
+
+body.dark-theme .terminal-header {
+    background-color: #2d2d30;
+    border-bottom-color: #3e3e42;
+}
+
+body.dark-theme .terminal-body {
+    background-color: #1e1e1e;
+    color: #cccccc;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .terminal-container {
+        height: 250px;
+    }
+    
+    .main-container {
+        height: calc(100vh - var(--header-height) - 250px);
+        margin-bottom: 250px;
+    }
+    
+    .terminal-toggle-btn {
+        bottom: 260px;
+    }
+}
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
