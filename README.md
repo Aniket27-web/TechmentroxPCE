@@ -59,7 +59,7 @@ An AI-powered coding IDE that integrates Monaco Editor with Google Gemini AI to 
 
    Below is a screenshot of the current IDE layout (editor top-left, terminal bottom-left, AI assistant on the right). This is a generated placeholder image — for an exact screenshot, open the app in your browser and capture one.
 
-   ![IDE Screenshot](assets/screenshot.svg)
+   ![IDE Screenshot](assets/screenshot.png)
 
 ## Keyboard Shortcuts
 
