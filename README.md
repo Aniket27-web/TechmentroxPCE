@@ -55,6 +55,12 @@ An AI-powered coding IDE that integrates Monaco Editor with Google Gemini AI to 
    - Use AI buttons (Explain, Debug, Generate, Optimize) for assistance
    - Execute code using Ctrl+Enter or the terminal
 
+   ## Screenshot
+
+   Below is a screenshot of the current IDE layout (editor top-left, terminal bottom-left, AI assistant on the right). This is a generated placeholder image — for an exact screenshot, open the app in your browser and capture one.
+
+   ![IDE Screenshot](assets/screenshot.svg)
+
 ## Keyboard Shortcuts
 
 - `Ctrl/Cmd + E`: Explain code
