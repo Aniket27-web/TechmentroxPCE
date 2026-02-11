@@ -40,10 +40,10 @@ class Terminal {
             </div>
         `;
 
-        // Add terminal to the page
-        const mainContainer = document.querySelector('.main-container');
-        if (mainContainer) {
-            mainContainer.appendChild(terminalContainer);
+        // Add terminal to the left column so it appears under the editor
+        const leftColumn = document.querySelector('.left-column') || document.querySelector('.main-container');
+        if (leftColumn) {
+            leftColumn.appendChild(terminalContainer);
         }
 
         this.container = terminalContainer;

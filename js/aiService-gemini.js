@@ -132,8 +132,14 @@ class AIServiceGemini {
     }
 
     isReady() {
-        // Backend mode: always ready (API key is on server)
-        return true;
+        // If a backend is configured (localhost or serverless path), assume server will provide the key.
+        if (this.backendURL && (this.backendURL.includes('localhost') || this.backendURL.startsWith('/api/ai'))) {
+            return true;
+        }
+
+        // Otherwise require a client-side API key to be present.
+        const key = this.apiKey || (typeof window !== 'undefined' ? localStorage.getItem('gemini-api-key') : null);
+        return !!(key && key.trim());
     }
 }
 

@@ -130,9 +130,32 @@ body.dark-theme {
 
 /* Main Container */
 .main-container {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr var(--sidebar-width);
+    grid-template-rows: 1fr;
+    gap: 0;
     height: calc(100vh - var(--header-height) - 40px);
     margin-top: var(--header-height);
+}
+
+.left-column {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.right-panel {
+    width: var(--sidebar-width);
+    background-color: var(--light-surface);
+    border-left: 1px solid var(--light-border);
+    padding: 20px;
+    overflow-y: auto;
+}
+
+body.dark-theme .right-panel {
+    background-color: var(--dark-surface);
+    border-left-color: var(--dark-border);
 }
 
 /* Editor Section */
@@ -586,24 +609,20 @@ body.dark-theme .footer {
     transform: translateY(-1px);
 }
 
-/* Terminal Styles */
+/* Terminal Styles (now placed under the editor in the left column) */
 .terminal-container {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    position: relative;
     height: 300px;
     background-color: #1e1e1e;
     border-top: 1px solid #3e3e42;
     display: flex;
     flex-direction: column;
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-    z-index: 1000;
-    transition: transform 0.3s ease;
+    z-index: 2;
 }
 
 .terminal-container.hidden {
-    transform: translateY(100%);
+    display: none;
 }
 
 .terminal-header {
@@ -739,12 +758,24 @@ body.dark-theme .footer {
     background: #4e4e52;
 }
 
-/* Adjust main container for terminal */
-.main-container {
-    display: flex;
-    height: calc(100vh - var(--header-height) - 300px);
-    margin-top: var(--header-height);
-    margin-bottom: 300px;
+/* Responsive fallback for smaller screens: stack panels */
+@media (max-width: 768px) {
+    .main-container {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - var(--header-height));
+        margin-top: var(--header-height);
+    }
+
+    .right-panel {
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid var(--light-border);
+    }
+
+    .left-column {
+        min-height: 60vh;
+    }
 }
 
 /* Terminal toggle button in editor */

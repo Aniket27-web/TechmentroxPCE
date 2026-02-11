@@ -17,7 +17,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
 </head>
-<body>
+<body class="dark-theme">
     <header class="header">
         <div class="logo">
             <span class="logo-icon" aria-hidden="true">⚡</span>
@@ -55,7 +55,8 @@
     </div>
 
     <main class="main-container">
-        <section class="editor-section">
+        <div class="left-column">
+            <section class="editor-section">
             <div class="editor-toolbar">
                 <h2>Code Editor</h2>
                 <div class="editor-actions">
@@ -64,9 +65,12 @@
                 </div>
             </div>
             <div id="monaco-editor" class="monaco-editor"></div>
-        </section>
+            </section>
 
-        <aside class="sidebar">
+            <!-- Terminal will be mounted into the left-column by terminal.js -->
+        </div>
+
+        <aside class="sidebar right-panel">
             <div class="ai-actions">
                 <h3>AI Assistant</h3>
                 <div class="action-buttons">
