@@ -1,37 +1,69 @@
 class AIServiceGemini {
     constructor() {
         this.apiKey = ""; // No longer used when backend is active
-        this.backendURL = "http://localhost:5001/api/ai";
+        // Use local express backend when running on localhost, otherwise use relative serverless path
+        if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+            this.backendURL = "http://localhost:5001/api/ai";
+        } else {
+            this.backendURL = "/api/ai"; // use relative path for Vercel serverless functions
+        }
+        this.apiKey = (typeof window !== 'undefined') ? (localStorage.getItem('gemini-api-key') || '') : '';
     }
 
     async makeRequest(endpoint, payload) {
-        let response;
+        // Direct client-side Gemini calls using user-provided API key
+        const key = this.apiKey || (typeof window !== 'undefined' ? localStorage.getItem('gemini-api-key') : null);
+        if (!key) {
+            throw new Error('No Gemini API key found. Paste your key into the API Key field and click Save.');
+        }
+
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`;
+
+        // Build the prompt depending on endpoint
+        let prompt = '';
+        switch (endpoint) {
+            case 'explain':
+                prompt = `Explain the following ${payload.language} code:\n\n${payload.code}`;
+                break;
+            case 'debug':
+                prompt = `Find bugs in this ${payload.language} code and suggest fixes:\n\n${payload.code}`;
+                break;
+            case 'generate':
+                prompt = `Generate ${payload.language} code for the following request:\n\n${payload.prompt}`;
+                break;
+            case 'optimize':
+                prompt = `Optimize the following ${payload.language} code:\n\n${payload.code}`;
+                break;
+            case 'custom':
+                prompt = payload.code ? `${payload.prompt}\n\nRelevant code (${payload.language}):\n${payload.code}` : payload.prompt;
+                break;
+            default:
+                throw new Error('Unknown AI endpoint');
+        }
+
+        const body = JSON.stringify({
+            contents: [ { role: 'user', parts: [{ text: prompt }] } ],
+            generationConfig: { temperature: 0.7, maxOutputTokens: 2000 }
+        });
+
+        let resp;
         try {
-            response = await fetch(`${this.backendURL}/${endpoint}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
+            resp = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
         } catch (err) {
-            if (err.message === "Failed to fetch" || err.name === "TypeError") {
-                throw new Error("Cannot connect to backend. Run start.bat or: cd backend && npm start (then npm start for frontend)");
+            if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
+                throw new Error('Network error when contacting Gemini API. Check your network and CORS policy.');
             }
             throw err;
         }
 
-        let data;
-        try {
-            data = await response.json();
-        } catch {
-            throw new Error(`Backend returned invalid response (${response.status}). Is the server running?`);
+        const data = await resp.json().catch(() => null);
+        if (!resp.ok) {
+            const msg = data?.error?.message || `Gemini API error (${resp.status})`;
+            throw new Error(msg);
         }
 
-        if (!response.ok) {
-            const errorMsg = data.error || `Backend error (${response.status})`;
-            throw new Error(errorMsg);
-        }
-
-        return data.result || "";
+        const result = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        return result;
     }
 
     explainCode(code, language) {
