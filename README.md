@@ -1,119 +1,103 @@
-# AI-Powered Coding IDE
+# AI-Powered IDE
 
-A web-based intelligent development environment that integrates Monaco Editor with AI assistance for enhanced coding productivity.
+An AI-powered coding IDE that integrates Monaco Editor with Google Gemini AI to provide intelligent code assistance, debugging, generation, and optimization features.
 
 ## Features
 
-- **Monaco Editor Integration**: Professional code editor with syntax highlighting, IntelliSense, and more
-- **AI-Powered Assistance**: 
+- **Code Editor**: Powered by Monaco Editor (the same editor used in VS Code) with syntax highlighting and IntelliSense for multiple programming languages
+- **AI Assistant**: Leverage Google Gemini AI for:
   - Code explanation
-  - Debugging help
+  - Debugging assistance
   - Code generation
-  - Code optimization
-  - Custom prompts
-- **Multi-Language Support**: JavaScript, Python, Java, C++, HTML, CSS, JSON, SQL
-- **Dark/Light Theme**: Toggle between themes with system preference detection
+  - Performance optimization
+- **Custom Prompts**: Send custom prompts to the AI for specific coding tasks
+- **Terminal Integration**: Built-in terminal for code execution and command-line operations
+- **Theme Support**: Light and dark themes with automatic system preference detection
+- **Multi-Language Support**: JavaScript, Java, C++, HTML, CSS, JSON, SQL, Python, and more
 - **Responsive Design**: Works on desktop and mobile devices
-- **Keyboard Shortcuts**: Quick access to AI features
-- **Local Storage**: Saves API key and theme preferences
 
-## Setup Instructions
+## Installation
 
-1. **Get OpenAI API Key**:
-   - Visit [OpenAI Platform](https://platform.openai.com/api-keys)
-   - Create an account and generate an API key
+1. **Clone the repository**:
+   ```bash
+   git clone <repository-url>
+   cd AI-Powered-IDE
+   ```
 
-2. **Run the IDE**:
-   - Open `index.html` in a web browser
-   - Enter your OpenAI API key when prompted
-   - Start coding with AI assistance!
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Get a Google Gemini API Key**:
+   - Visit [Google AI Studio](https://aistudio.google.com/apikey)
+   - Create a free API key
+   - Keep this key secure and do not share it
 
 ## Usage
 
-### AI Actions
-- **Explain**: Select code and click "Explain" or press `Ctrl+E`
-- **Debug**: Select code and click "Debug" or press `Ctrl+Shift+D`
-- **Generate**: Click "Generate" or press `Ctrl+G` and describe what you want
-- **Optimize**: Select code and click "Optimize" or press `Ctrl+O`
-- **Custom Prompt**: Enter a custom prompt and click "Send Custom Prompt"
+1. **Start the development server**:
+   ```bash
+   npm start
+   ```
+   This will start a local server on port 3000.
 
-### Keyboard Shortcuts
-- `Ctrl+E`: Explain code
-- `Ctrl+Shift+D`: Debug code
-- `Ctrl+G`: Generate code
-- `Ctrl+O`: Optimize code
-- `Ctrl+Enter`: Send custom prompt
-- `Ctrl+?`: Show help dialog
+2. **Open in browser**:
+   Navigate to `http://localhost:3000`
 
-## File Structure
+3. **Configure API Key**:
+   - Enter your Gemini API key in the input field in the header
+   - Click "Save Key" to store it locally
+
+4. **Start Coding**:
+   - Select your programming language from the dropdown
+   - Write or paste code in the editor
+   - Use AI buttons (Explain, Debug, Generate, Optimize) for assistance
+   - Execute code using Ctrl+Enter or the terminal
+
+## Keyboard Shortcuts
+
+- `Ctrl/Cmd + E`: Explain code
+- `Ctrl/Cmd + Shift + D`: Debug code
+- `Ctrl/Cmd + G`: Generate code
+- `Ctrl/Cmd + O`: Optimize code
+- `Ctrl/Cmd + Enter`: Execute code
+- `Ctrl/Cmd + ?`: Show help dialog
+
+## Technologies Used
+
+- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
+- **Editor**: Monaco Editor
+- **AI Integration**: Google Gemini API
+- **Build Tool**: npm scripts with `serve`
+- **Styling**: Custom CSS with CSS Variables for theming
+
+## Project Structure
 
 ```
 AI-Powered-IDE/
 ├── index.html          # Main HTML file
 ├── css/
-│   └── style.css       # Styling and responsive design
+│   └── style.css       # Application styles
 ├── js/
-│   ├── editor.js       # Monaco Editor initialization
-│   ├── aiService.js    # OpenAI API integration
-│   ├── actions.js      # Button event handling
-│   └── main.js         # App initialization and main logic
-├── assets/
-│   └── logo.png        # Application logo
-└── README.md           # This file
+│   ├── main.js         # Main application logic
+│   ├── editor.js       # Monaco Editor integration
+│   ├── aiService-gemini.js  # Gemini AI service
+│   ├── actions.js      # AI action handlers
+│   ├── simpleExecutor.js    # Code execution
+│   └── terminal.js     # Terminal integration
+├── package.json        # Project configuration
+└── README.md          # This file
 ```
-
-## Configuration
-
-The IDE uses OpenAI's GPT-3.5-turbo model by default. You can modify the AI settings in `js/aiService.js`:
-
-- `model`: AI model to use
-- `maxTokens`: Maximum response length
-- `temperature`: Response creativity (0-1)
-- `baseURL`: API endpoint
-
-## Browser Compatibility
-
-- Chrome 90+
-- Firefox 88+
-- Safari 14+
-- Edge 90+
-
-## Security Notes
-
-- API keys are stored locally in your browser only
-- No data is sent to third-party servers except OpenAI API
-- Clear your browser data to remove stored API keys
-
-## Future Enhancements
-
-- File explorer panel
-- Multi-file project support
-- GitHub integration
-- Real-time collaboration
-- Code execution sandbox
-- Additional AI providers
-- Plugin system
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-MIT License - feel free to use this project for personal or commercial purposes.
+This project is open source and available under the [MIT License](LICENSE).
 
-## Support
+## Disclaimer
 
-For issues or questions:
-1. Check the browser console for errors
-2. Verify your OpenAI API key is valid
-3. Ensure you have internet connectivity
-4. Try refreshing the page
-
----
-
-Built with ❤️ using Monaco Editor and OpenAI API
+This IDE is for educational and development purposes. Ensure you have proper API usage limits and costs in mind when using Google Gemini API. Always review AI-generated code before using it in production.
