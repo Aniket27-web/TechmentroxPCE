@@ -803,6 +803,52 @@ body.dark-theme .terminal-body {
         bottom: 260px;
     }
 }
+
+/* API Key Banner */
+.api-key-banner {
+    position: fixed;
+    top: var(--header-height);
+    left: 0;
+    right: 0;
+    background: linear-gradient(90deg,#fffbeb,#fff4e6);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    padding: 10px 20px;
+    z-index: 1200;
+    display: flex;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+.api-key-banner .banner-content {
+    width: 100%;
+    max-width: 1100px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+.api-key-banner .banner-text {
+    font-size: 14px;
+    color: #3b3b3b;
+}
+.api-key-banner .banner-text a {
+    font-weight: 700;
+    color: #0b66c3;
+    margin-left: 6px;
+    text-decoration: underline;
+}
+.api-key-banner .banner-actions { display:flex; gap:8px; align-items:center; }
+.api-key-banner.hidden { display: none; }
+
+/* Highlighted API input when banner shown */
+.api-key-input.highlight {
+    box-shadow: 0 0 0 6px rgba(11,102,195,0.12);
+    animation: apiPulse 1.6s infinite;
+}
+@keyframes apiPulse {
+    0% { box-shadow: 0 0 0 4px rgba(11,102,195,0.08); }
+    50% { box-shadow: 0 0 0 8px rgba(11,102,195,0.12); }
+    100% { box-shadow: 0 0 0 4px rgba(11,102,195,0.08); }
+}
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;

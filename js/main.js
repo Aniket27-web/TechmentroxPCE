@@ -81,12 +81,22 @@ class App {
         // API Key handling
         const apiKeyInput = document.getElementById('api-key-input');
         const saveApiKeyBtn = document.getElementById('save-api-key');
+        const apiKeyBanner = document.getElementById('api-key-banner');
+        const bannerEnterBtn = document.getElementById('banner-enter-btn');
+        const bannerDismiss = document.getElementById('banner-dismiss');
         if (apiKeyInput && saveApiKeyBtn) {
             // Load saved API key (ignore old invalid placeholder)
             const savedKey = localStorage.getItem('gemini-api-key');
             const invalidPlaceholder = "AIzaSyCXUIL_Z4gZG-5f-4ahki499vzNBboGPvA";
             if (savedKey && savedKey !== invalidPlaceholder) {
                 apiKeyInput.value = savedKey;
+            }
+
+            // Show banner/prompt if no API key saved and banner not dismissed
+            const dismissed = localStorage.getItem('api-key-banner-dismissed');
+            if (!savedKey && !dismissed && apiKeyBanner) {
+                apiKeyBanner.classList.remove('hidden');
+                apiKeyInput.classList.add('highlight');
             }
 
             saveApiKeyBtn.addEventListener('click', () => {
@@ -97,10 +107,30 @@ class App {
                         this.aiService.apiKey = apiKey;
                     }
                     this.showToast('API Key saved successfully!');
+                    // hide banner and remove highlight
+                    if (apiKeyBanner) {
+                        apiKeyBanner.classList.add('hidden');
+                    }
+                    apiKeyInput.classList.remove('highlight');
                 } else {
                     this.showToast('Please enter a valid API key.');
                 }
             });
+
+            if (bannerEnterBtn) {
+                bannerEnterBtn.addEventListener('click', () => {
+                    apiKeyInput.focus();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+
+            if (bannerDismiss) {
+                bannerDismiss.addEventListener('click', () => {
+                    if (apiKeyBanner) apiKeyBanner.classList.add('hidden');
+                    apiKeyInput.classList.remove('highlight');
+                    localStorage.setItem('api-key-banner-dismissed', '1');
+                });
+            }
         }
 
         // Theme toggle
