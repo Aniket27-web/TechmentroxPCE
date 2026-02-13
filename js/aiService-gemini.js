@@ -1,20 +1,57 @@
+// Default API key to use when no runtime prompt is desired.
+// Replace the empty string below with your default key or put it into localStorage under 'gemini-api-key'.
+const DEFAULT_GEMINI_API_KEY = '';
+
 class AIServiceGemini {
     constructor() {
-        this.apiKey = ""; // No longer used when backend is active
+        this.apiKey = "";
         // Use local express backend when running on localhost, otherwise use relative serverless path
         if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
             this.backendURL = "http://localhost:5001/api/ai";
         } else {
             this.backendURL = "/api/ai"; // use relative path for Vercel serverless functions
         }
-        this.apiKey = (typeof window !== 'undefined') ? (localStorage.getItem('gemini-api-key') || '') : '';
+        // Priority: explicit default in code -> localStorage -> empty
+        if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('gemini-api-key');
+            this.apiKey = DEFAULT_GEMINI_API_KEY || (stored || '');
+            // persist default into localStorage for consistency (if a default is set)
+            if (DEFAULT_GEMINI_API_KEY && (!stored || stored !== DEFAULT_GEMINI_API_KEY)) {
+                try { localStorage.setItem('gemini-api-key', DEFAULT_GEMINI_API_KEY); } catch (e) {}
+            }
+        } else {
+            this.apiKey = DEFAULT_GEMINI_API_KEY || '';
+        }
     }
 
     async makeRequest(endpoint, payload) {
-        // Direct client-side Gemini calls using user-provided API key
-        const key = this.apiKey || (typeof window !== 'undefined' ? localStorage.getItem('gemini-api-key') : null);
+        // Prefer server-side proxy if available (avoids exposing API keys client-side)
+        if (this.backendURL) {
+            try {
+                const resp = await fetch(this.backendURL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ endpoint, payload })
+                });
+
+                const data = await resp.json().catch(() => null);
+                if (!resp.ok) {
+                    const msg = data?.error || `Backend error (${resp.status})`;
+                    throw new Error(msg);
+                }
+                return data?.result || '';
+            } catch (err) {
+                if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
+                    throw new Error('Network error when contacting backend AI proxy.');
+                }
+                throw err;
+            }
+        }
+
+        // Fallback: if no backend URL, attempt direct client-side call (uses DEFAULT_GEMINI_API_KEY or localStorage)
+        const key = DEFAULT_GEMINI_API_KEY || (typeof window !== 'undefined' ? localStorage.getItem('gemini-api-key') : null);
         if (!key) {
-            throw new Error('No Gemini API key found. Paste your key into the API Key field and click Save.');
+            throw new Error('No Gemini API key configured. Deploy server with `GEMINI_API_KEY` or set `DEFAULT_GEMINI_API_KEY`.');
         }
 
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`;

@@ -97,17 +97,8 @@ class ActionManager {
         if (this.isLoading) return;
         
         if (!this.aiService.isReady()) {
-            // Show the API key banner and focus input so user can save a key quickly
-            const apiKeyBanner = document.getElementById('api-key-banner');
-            const apiKeyInput = document.getElementById('api-key-input');
-            if (apiKeyBanner) apiKeyBanner.classList.remove('hidden');
-            if (apiKeyInput) {
-                apiKeyInput.classList.add('highlight');
-                apiKeyInput.focus();
-                // Scroll to top to ensure banner/input is visible
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-            this.showError('AI service not ready. Please set your API key.');
+            // No interactive API key prompt - simply show a concise error.
+            this.showError('AI service not ready.');
             return;
         }
 

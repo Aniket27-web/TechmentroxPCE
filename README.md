@@ -29,10 +29,10 @@ An AI-powered coding IDE that integrates Monaco Editor with Google Gemini AI to 
    npm install
    ```
 
-3. **Get a Google Gemini API Key**:
-   - Visit [Google AI Studio](https://aistudio.google.com/apikey)
-   - Create a free API key
-   - Keep this key secure and do not share it
+3. **Get a Google Gemini API Key (recommended: server-side)**:
+   - For security, deploy the project to Vercel and set the environment variable `GEMINI_API_KEY` in your Vercel project settings. The serverless endpoint `api/ai` will use that key and your private key will never be exposed to the browser or committed to source control.
+   - Alternatively (not recommended for public repos), you can set `DEFAULT_GEMINI_API_KEY` in `js/aiService-gemini.js` or add a `gemini-api-key` entry to `localStorage` in the browser.
+   - Keep your key secure and do not commit private keys to public repositories.
 
 ## Usage
 
@@ -46,8 +46,8 @@ An AI-powered coding IDE that integrates Monaco Editor with Google Gemini AI to 
    Navigate to `http://localhost:3000`
 
 3. **Configure API Key**:
-   - Enter your Gemini API key in the input field in the header
-   - Click "Save Key" to store it locally
+   - Recommended (Vercel): set `GEMINI_API_KEY` in Vercel dashboard. The `api/ai` serverless route will proxy requests to Google Gemini using that env var.
+   - Local/dev fallback: edit `js/aiService-gemini.js` to set `DEFAULT_GEMINI_API_KEY` for quick testing, or run a local server and provide a key via local server config.
 
 4. **Start Coding**:
    - Select your programming language from the dropdown

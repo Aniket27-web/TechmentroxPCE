@@ -24,10 +24,6 @@
             <h1>AI-Powered IDE</h1>
         </div>
         <div class="header-controls">
-            <div class="api-key-section">
-                <input type="password" id="api-key-input" class="api-key-input" placeholder="Enter Gemini API Key (get free at aistudio.google.com/apikey)" title="Get a free API key at https://aistudio.google.com/apikey">
-                <button id="save-api-key" class="btn btn-small">Save Key</button>
-            </div>
             <select id="language-select" class="language-select">
                 <option value="javascript">JavaScript</option>
                 <option value="java">Java</option>
@@ -43,16 +39,7 @@
         </div>
     </header>
 
-    <!-- API Key Banner -->
-    <div id="api-key-banner" class="api-key-banner hidden" role="status" aria-live="polite">
-        <div class="banner-content">
-            <div class="banner-text">AI features require a Gemini API key — <a id="get-key-link" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">GET KEY HERE</a></div>
-            <div class="banner-actions">
-                <button id="banner-enter-btn" class="btn btn-success">Enter API Key</button>
-                <button id="banner-dismiss" class="btn btn-small">Dismiss</button>
-            </div>
-        </div>
-    </div>
+    <!-- API key UI removed: using default/configured key by design -->
 
     <main class="main-container">
         <div class="left-column">
