@@ -43,7 +43,8 @@ class VoiceAssistant {
             let transcript = '';
             for (let i = e.resultIndex; i < e.results.length; ++i) transcript += e.results[i][0].transcript;
             transcript = transcript.trim().toLowerCase();
-            if (transcript.includes('wake up') || transcript.includes('wakeup') || transcript.includes('hey jarvis')) {
+            // Recognize the new wake phrase "wake upp" (Hinglish-friendly)
+            if (transcript.includes('wake upp') || transcript.includes('wakeup') || transcript.includes('wake up') || transcript.includes('hey jarvis')) {
                 this.onWake();
             }
         };
@@ -60,6 +61,18 @@ class VoiceAssistant {
         if (btn) {
             btn.addEventListener('click', () => this.toggle());
         }
+
+        // Ensure persistent UI notice exists to inform users about the voice assistant
+        let notice = document.getElementById('voice-notice');
+        if (!notice) {
+            notice = document.createElement('div');
+            notice.id = 'voice-notice';
+            notice.className = 'voice-notice';
+            notice.innerText = 'Voice assistant available — say "wake upp" to activate';
+            document.body.appendChild(notice);
+        } else {
+            notice.innerText = 'Voice assistant available — say "wake upp" to activate';
+        }
     }
 
     start() {
@@ -68,6 +81,7 @@ class VoiceAssistant {
             this.listening = true;
             this.wakeRec.start();
             this._setButtonActive(true);
+            this._showTransientNotice('Voice assistant active');
         } catch (e) {
             console.warn('Could not start wake recognition', e);
         }
@@ -78,6 +92,7 @@ class VoiceAssistant {
         this.listening = false;
         try { this.wakeRec.stop(); } catch (e) {}
         this._setButtonActive(false);
+        this._showTransientNotice('Voice assistant stopped');
     }
 
     toggle() {
@@ -134,6 +149,8 @@ class VoiceAssistant {
     async onWake() {
         // stop wake listening while we interact
         try { this.wakeRec.stop(); } catch (e) {}
+        // indicate listening state in UI
+        this._showTransientNotice('Listening...');
         this.speak('Yes, I am listening. Ask your code question.');
 
         // One-shot command recognition
@@ -143,6 +160,18 @@ class VoiceAssistant {
             // resume wake listening
             try { if (this.listening) this.wakeRec.start(); } catch (e) {}
         }
+    }
+
+    _showTransientNotice(text, ms = 3500) {
+        const n = document.getElementById('voice-notice');
+        if (!n) return;
+        const prev = n.innerText;
+        n.innerText = text;
+        n.classList.add('active');
+        setTimeout(() => {
+            n.innerText = 'Voice assistant available — say "wake upp" to activate';
+            n.classList.remove('active');
+        }, ms);
     }
 
     _listenForCommand() {

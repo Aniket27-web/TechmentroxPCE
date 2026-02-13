@@ -6,6 +6,11 @@
     <title>AI-Powered Coding IDE</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+    /* Voice assistant notice */
+    .voice-notice { position: fixed; right: 16px; bottom: 16px; background: rgba(17,17,17,0.9); color: #fff; padding: 8px 12px; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.4); z-index: 9999; font-size: 13px; }
+    .voice-notice.active { background: #2ecc71; color: #042; }
+    </style>
     <script src="https://unpkg.com/monaco-editor@0.44.0/min/vs/loader.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
