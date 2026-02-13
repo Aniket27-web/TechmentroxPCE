@@ -24,6 +24,7 @@ class VoiceAssistant {
     }
 
     init() {
+        console.debug('VoiceAssistant: init');
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
             console.warn('SpeechRecognition not supported in this browser. Voice assistant disabled.');
@@ -43,10 +44,24 @@ class VoiceAssistant {
             let transcript = '';
             for (let i = e.resultIndex; i < e.results.length; ++i) transcript += e.results[i][0].transcript;
             transcript = transcript.trim().toLowerCase();
+            console.debug('VoiceAssistant wakeRec.onresult:', transcript);
             // Recognize the new wake phrase "wake upp" (Hinglish-friendly)
             if (transcript.includes('wake upp') || transcript.includes('wakeup') || transcript.includes('wake up') || transcript.includes('hey jarvis')) {
                 this.onWake();
             }
+        };
+
+        this.wakeRec.onstart = () => {
+            console.debug('VoiceAssistant wakeRec started');
+        };
+
+        this.wakeRec.onerror = (err) => {
+            console.error('VoiceAssistant wakeRec error', err);
+            this._showTransientNotice('Voice assistant error');
+        };
+
+        this.wakeRec.onnomatch = (e) => {
+            console.debug('VoiceAssistant wakeRec non-match', e);
         };
 
         this.wakeRec.onend = () => {
@@ -82,6 +97,7 @@ class VoiceAssistant {
             this.wakeRec.start();
             this._setButtonActive(true);
             this._showTransientNotice('Voice assistant active');
+            console.debug('VoiceAssistant start() called');
         } catch (e) {
             console.warn('Could not start wake recognition', e);
         }
@@ -93,6 +109,7 @@ class VoiceAssistant {
         try { this.wakeRec.stop(); } catch (e) {}
         this._setButtonActive(false);
         this._showTransientNotice('Voice assistant stopped');
+        console.debug('VoiceAssistant stop() called');
     }
 
     toggle() {
@@ -180,13 +197,15 @@ class VoiceAssistant {
             const rec = new SpeechRecognition();
             rec.continuous = false;
             rec.interimResults = false;
-            rec.lang = 'en-US';
+            // Use Hinglish-friendly locale for better recognition
+            rec.lang = 'hi-IN';
             let handled = false;
 
             rec.onresult = async (e) => {
                 let transcript = '';
                 for (let i = e.resultIndex; i < e.results.length; ++i) transcript += e.results[i][0].transcript;
                 transcript = transcript.trim();
+                console.debug('VoiceAssistant command transcript:', transcript);
                 handled = true;
                 try {
                     await this._handleCommand(transcript);
@@ -195,6 +214,9 @@ class VoiceAssistant {
                 }
                 resolve();
             };
+
+            rec.onstart = () => console.debug('VoiceAssistant command rec started');
+            rec.onerror = (e) => { console.error('VoiceAssistant command rec error', e); resolve(); };
 
             rec.onerror = (e) => {
                 resolve();
@@ -271,12 +293,13 @@ class VoiceAssistant {
             const rec = new SpeechRecognition();
             rec.continuous = false;
             rec.interimResults = false;
-            rec.lang = 'en-US';
+            rec.lang = 'hi-IN';
             let handled = false;
             rec.onresult = (e) => {
                 let transcript = '';
                 for (let i = e.resultIndex; i < e.results.length; ++i) transcript += e.results[i][0].transcript;
                 transcript = transcript.trim().toLowerCase();
+                console.debug('VoiceAssistant yes/no transcript:', transcript);
                 handled = true;
                 resolve(transcript.includes('y') || transcript.includes('yes') || transcript.includes('apply'));
             };
