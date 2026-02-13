@@ -32,11 +32,12 @@ class VoiceAssistant {
 
         this.SpeechRecognition = SpeechRecognition;
 
-        // Wake recognizer (continuous)
+        // Wake recognizer (continuous) - use Hinglish-friendly locale
         this.wakeRec = new SpeechRecognition();
         this.wakeRec.continuous = true;
         this.wakeRec.interimResults = false;
-        this.wakeRec.lang = 'en-US';
+        // Use Hindi/Indian English locale to better accept Hinglish phrases
+        this.wakeRec.lang = 'hi-IN';
 
         this.wakeRec.onresult = (e) => {
             let transcript = '';
@@ -91,10 +92,43 @@ class VoiceAssistant {
 
     speak(text) {
         if (!text) return;
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = 'en-US';
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(utter);
+        const synth = window.speechSynthesis;
+
+        const pickVoice = () => {
+            const voices = synth.getVoices() || [];
+            // Prefer Indian voices (en-IN or hi-IN)
+            let v = voices.find(v => /en[-_ ]?IN|hi[-_ ]?IN/i.test(v.lang));
+            if (!v) v = voices.find(v => /Aditi|Ananya|Lekha|Kumar|Ravi|Geeta|Ritu|Shruti/i.test(v.name));
+            if (!v) v = voices.find(v => v.lang && v.lang.startsWith('en'));
+            return v;
+        };
+
+        let voice = pickVoice();
+        const speakWithVoice = (voiceToUse) => {
+            const utter = new SpeechSynthesisUtterance(text);
+            if (voiceToUse) utter.voice = voiceToUse;
+            utter.lang = (voiceToUse && voiceToUse.lang) ? voiceToUse.lang : 'en-IN';
+            try { synth.cancel(); } catch (e) {}
+            synth.speak(utter);
+        };
+
+        if (!voice) {
+            // Voices may not be loaded yet — wait for voiceschanged then speak
+            const onVoicesChanged = () => {
+                try {
+                    voice = pickVoice();
+                    speakWithVoice(voice);
+                } finally {
+                    try { synth.removeEventListener('voiceschanged', onVoicesChanged); } catch (e) {}
+                }
+            };
+            try { synth.addEventListener('voiceschanged', onVoicesChanged); } catch (e) { /* fallback */ }
+            // Also attempt immediate fallback
+            speakWithVoice(null);
+            return;
+        }
+
+        speakWithVoice(voice);
     }
 
     async onWake() {
