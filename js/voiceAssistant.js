@@ -53,11 +53,13 @@ class VoiceAssistant {
 
         this.wakeRec.onstart = () => {
             console.debug('VoiceAssistant wakeRec started');
+            if (this.debugEl) this._appendDebug('wake recognizer started');
         };
 
         this.wakeRec.onerror = (err) => {
             console.error('VoiceAssistant wakeRec error', err);
             this._showTransientNotice('Voice assistant error');
+            if (this.debugEl) this._appendDebug('wakeRec error: ' + (err && err.error ? err.error : String(err)));
         };
 
         this.wakeRec.onnomatch = (e) => {
@@ -88,18 +90,40 @@ class VoiceAssistant {
         } else {
             notice.innerText = 'Voice assistant available — say "wake upp" to activate';
         }
+
+        // Debug panel element (on-screen) for easier diagnostics
+        this.debugEl = document.getElementById('voice-debug');
+        if (this.debugEl) {
+            this._appendDebug('VoiceAssistant initialized');
+        }
     }
 
     start() {
         if (!this.wakeRec || this.listening) return;
         try {
+            // Request microphone permission explicitly to ensure browser prompts
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                try {
+                    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+                        try { stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+                    }).catch(err => {
+                        console.warn('Microphone permission denied or unavailable', err);
+                        if (this.debugEl) this._appendDebug('Mic permission denied: ' + String(err));
+                        this._showTransientNotice('Please allow microphone access');
+                    });
+                } catch (e) {
+                    console.debug('getUserMedia request failed', e);
+                }
+            }
             this.listening = true;
             this.wakeRec.start();
             this._setButtonActive(true);
             this._showTransientNotice('Voice assistant active');
             console.debug('VoiceAssistant start() called');
+            if (this.debugEl) this._appendDebug('started listening');
         } catch (e) {
             console.warn('Could not start wake recognition', e);
+            if (this.debugEl) this._appendDebug('start failed: ' + String(e));
         }
     }
 
@@ -110,6 +134,7 @@ class VoiceAssistant {
         this._setButtonActive(false);
         this._showTransientNotice('Voice assistant stopped');
         console.debug('VoiceAssistant stop() called');
+        if (this.debugEl) this._appendDebug('stopped listening');
     }
 
     toggle() {
@@ -220,6 +245,7 @@ class VoiceAssistant {
                 for (let i = e.resultIndex; i < e.results.length; ++i) transcript += e.results[i][0].transcript;
                 transcript = transcript.trim();
                 console.debug('VoiceAssistant command transcript:', transcript);
+                if (this.debugEl) this._appendDebug('command: ' + transcript);
                 handled = true;
                 try {
                     await this._handleCommand(transcript);
@@ -232,9 +258,7 @@ class VoiceAssistant {
             rec.onstart = () => console.debug('VoiceAssistant command rec started');
             rec.onerror = (e) => { console.error('VoiceAssistant command rec error', e); resolve(); };
 
-            rec.onerror = (e) => {
-                resolve();
-            };
+            rec.onend = () => { console.debug('VoiceAssistant command rec ended'); };
 
             rec.onend = () => {
                 if (!handled) resolve();
@@ -314,6 +338,7 @@ class VoiceAssistant {
                 for (let i = e.resultIndex; i < e.results.length; ++i) transcript += e.results[i][0].transcript;
                 transcript = transcript.trim().toLowerCase();
                 console.debug('VoiceAssistant yes/no transcript:', transcript);
+                if (this.debugEl) this._appendDebug('yes/no: ' + transcript);
                 handled = true;
                 resolve(transcript.includes('y') || transcript.includes('yes') || transcript.includes('apply'));
             };
@@ -322,6 +347,26 @@ class VoiceAssistant {
             try { rec.start(); } catch (e) { resolve(false); }
         });
     }
+
+        _appendDebug(text) {
+            try {
+                const el = this.debugEl || document.getElementById('voice-debug');
+                if (!el) return;
+                const line = document.createElement('div');
+                line.className = 'line';
+                const time = new Date().toLocaleTimeString();
+                line.textContent = `[${time}] ${text}`;
+                el.prepend(line);
+                // keep visible when debugging
+                el.classList.add('show');
+                // auto-hide after a while
+                setTimeout(() => {
+                    try { if (el.children.length === 0) el.classList.remove('show'); } catch (e) {}
+                }, 8000);
+            } catch (e) {
+                /* ignore */
+            }
+        }
 }
 
 window.VoiceAssistant = VoiceAssistant;

@@ -10,6 +10,9 @@
     /* Voice assistant notice */
     .voice-notice { position: fixed; right: 16px; bottom: 16px; background: rgba(17,17,17,0.9); color: #fff; padding: 8px 12px; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.4); z-index: 9999; font-size: 13px; }
     .voice-notice.active { background: #2ecc71; color: #042; }
+    .voice-debug { position: fixed; right: 16px; bottom: 72px; width: 320px; max-height: 220px; overflow: auto; background: rgba(0,0,0,0.75); color: #fff; padding: 8px; border-radius: 8px; font-size: 12px; z-index: 9999; display: none; }
+    .voice-debug .line { padding: 4px 6px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .voice-debug.show { display: block; }
     </style>
     <script src="https://unpkg.com/monaco-editor@0.44.0/min/vs/loader.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
@@ -127,5 +130,6 @@
     <script src="js/actions.js"></script>
     <script src="js/voiceAssistant.js"></script>
     <script src="js/main.js"></script>
+    <div id="voice-debug" class="voice-debug" aria-hidden="true"></div>
 </body>
 </html>
