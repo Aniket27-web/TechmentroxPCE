@@ -3,6 +3,7 @@ class ActionManager {
         this.editor = editor;
         this.aiService = aiService;
         this.isLoading = false;
+        this.autoApplyFixes = true; // automatically apply fixes returned by debug
         this.init();
     }
 
@@ -90,6 +91,12 @@ class ActionManager {
                 e.preventDefault();
                 this.handleAction('optimize');
             }
+
+            // Ctrl/Cmd + Shift + L: Suggest next line and insert at cursor
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'l') {
+                e.preventDefault();
+                this.handleSuggestNextLine();
+            }
         });
     }
 
@@ -127,6 +134,16 @@ class ActionManager {
             }
             
             this.displayResponse(response);
+            // If debug action returned and auto-apply enabled, try to extract a fixed code block and apply
+            if (action === 'debug' && response && this.autoApplyFixes) {
+                try {
+                    const applied = this.tryApplyFixesFromResponse(response, language);
+                    if (applied) this.showToast('Applied fixes from AI');
+                } catch (err) {
+                    // ignore apply errors but log
+                    console.warn('Failed to apply fixes:', err);
+                }
+            }
             
         } catch (error) {
             this.showError(error.message);
@@ -293,6 +310,68 @@ class ActionManager {
             
         } catch (error) {
             this.showError(error.message);
+        } finally {
+            this.setLoading(false);
+        }
+    }
+
+    // Try to parse a fenced code block from the AI response and apply it.
+    tryApplyFixesFromResponse(response, language) {
+        if (!response || typeof response !== 'string') return false;
+        // Look for the first fenced code block: ```lang\n...``` or ```\n...```
+        const codeBlockRegex = /```(?:([a-zA-Z0-9_-]+)\n)?([\s\S]*?)```/;
+        const match = codeBlockRegex.exec(response);
+        if (!match) return false;
+        const blockLang = (match[1] || '').toLowerCase();
+        const code = match[2];
+
+        // If the code block language doesn't match the current language, still allow applying
+        // but prefer to only replace selection if language differs.
+        const selection = this.editor.getSelectedText();
+        if (selection && selection.trim()) {
+            // Replace only the selected text
+            this.editor.insertText(code, false);
+        } else {
+            // Replace entire editor content
+            this.editor.setValue(code);
+        }
+        return true;
+    }
+
+    // Ask AI to suggest the next line given current cursor context and insert it
+    async handleSuggestNextLine() {
+        if (!this.aiService.isReady()) {
+            this.showError('AI service not ready.');
+            return;
+        }
+
+        try {
+            this.setLoading(true);
+            const language = this.editor.currentLanguage;
+            // Provide a snippet around the cursor: 20 lines before and after
+            const full = this.editor.getValue();
+            const model = this.editor.editor.getModel();
+            const pos = this.editor.editor.getPosition();
+            const lineNum = pos ? pos.lineNumber : 1;
+            const startLine = Math.max(1, lineNum - 20);
+            const endLine = Math.min(model.getLineCount(), lineNum + 5);
+            const snippet = model.getValueInRange({ startLineNumber: startLine, startColumn: 1, endLineNumber: endLine, endColumn: model.getLineMaxColumn(endLine) });
+
+            const prompt = `You are a helpful coding assistant. Given the following ${language} code snippet and the cursor position at around the end, suggest only the next single line of code that logically follows. Do NOT provide explanations, only the suggested next line.`;
+
+            const response = await this.aiService.customPrompt(`${prompt}\n\n${snippet}`, null, language);
+            if (response && typeof response === 'string') {
+                // Extract plain text line (strip code fences if present)
+                const cleaned = response.replace(/```[\s\S]*?```/g, '').trim().split('\n')[0] || '';
+                if (cleaned) {
+                    this.editor.insertText(cleaned + '\n', true);
+                    this.showToast('Inserted suggested next line');
+                } else {
+                    this.showToast('AI returned no suggestion');
+                }
+            }
+        } catch (err) {
+            this.showError(err.message || 'Error getting suggestion');
         } finally {
             this.setLoading(false);
         }
