@@ -62,6 +62,17 @@ class App {
         
         // Add error styles
         this.actionManager.addErrorStyles();
+
+        // Initialize voice assistant if available
+        if (typeof VoiceAssistant !== 'undefined') {
+            try {
+                this.voiceAssistant = new VoiceAssistant(this.aiService, this.editor, this.actionManager);
+                // start listening by default
+                this.voiceAssistant.start();
+            } catch (e) {
+                console.warn('VoiceAssistant init failed', e);
+            }
+        }
     }
 
     waitForEditor() {
