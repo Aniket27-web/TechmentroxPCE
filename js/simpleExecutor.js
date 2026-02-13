@@ -7,6 +7,11 @@ class SimpleExecutor {
 
     init() {
         this.setupRunButton();
+        // Listen for background preload request for Pyodide
+        document.addEventListener('preload-pyodide', () => {
+            // fire-and-forget preload to speed up first Python execution
+            try { this.loadPyodide().catch(() => {}); } catch (e) {}
+        });
     }
 
     setupRunButton() {

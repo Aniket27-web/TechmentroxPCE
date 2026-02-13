@@ -187,12 +187,22 @@ SELECT * FROM users;`
     changeLanguage(language) {
         if (this.editor && language !== this.currentLanguage) {
             const currentContent = this.editor.getValue();
+            // Capture the previous default (for the currently set language)
+            const prevDefault = this.getDefaultCode();
+            // Update language
             this.currentLanguage = language;
-            
+
             monaco.editor.setModelLanguage(this.editor.getModel(), language);
-            
-            if (currentContent.trim() === this.getDefaultCode().trim()) {
+
+            // If the user hasn't modified the default content (it matches the previous default),
+            // replace it with the new language's default template. This avoids overwriting user code.
+            if (currentContent.trim() === (prevDefault || '').trim()) {
                 this.editor.setValue(this.getDefaultCode());
+            }
+
+            // If the user switched to Python, trigger background preload of Pyodide for faster execution.
+            if (language === 'python') {
+                try { document.dispatchEvent(new Event('preload-pyodide')); } catch (e) {}
             }
         }
     }
