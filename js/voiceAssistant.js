@@ -37,8 +37,8 @@ class VoiceAssistant {
         this.wakeRec = new SpeechRecognition();
         this.wakeRec.continuous = true;
         this.wakeRec.interimResults = false;
-        // Use Hindi/Indian English locale to better accept Hinglish phrases
-        this.wakeRec.lang = 'hi-IN';
+        // Use English locale for wake detection
+        this.wakeRec.lang = 'en-US';
 
         this.wakeRec.onresult = (e) => {
             let transcript = '';
@@ -178,7 +178,7 @@ class VoiceAssistant {
         const speakWithVoice = (voiceToUse) => {
             const utter = new SpeechSynthesisUtterance(text);
             if (voiceToUse) utter.voice = voiceToUse;
-            utter.lang = (voiceToUse && voiceToUse.lang) ? voiceToUse.lang : 'en-IN';
+            utter.lang = (voiceToUse && voiceToUse.lang) ? voiceToUse.lang : 'en-US';
             try { synth.cancel(); } catch (e) {}
             synth.speak(utter);
         };
@@ -236,8 +236,8 @@ class VoiceAssistant {
             const rec = new SpeechRecognition();
             rec.continuous = false;
             rec.interimResults = false;
-            // Use Hinglish-friendly locale for better recognition
-            rec.lang = 'hi-IN';
+            // Use English for command recognition
+            rec.lang = 'en-US';
             let handled = false;
 
             rec.onresult = async (e) => {
@@ -331,7 +331,7 @@ class VoiceAssistant {
             const rec = new SpeechRecognition();
             rec.continuous = false;
             rec.interimResults = false;
-            rec.lang = 'hi-IN';
+            rec.lang = 'en-US';
             let handled = false;
             rec.onresult = (e) => {
                 let transcript = '';
