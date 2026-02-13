@@ -72,6 +72,17 @@ class App {
             } catch (e) {
                 console.warn('VoiceAssistant init failed', e);
             }
+            // Wire manual wake button (if present)
+            const wakeBtn = document.getElementById('voice-wake');
+            if (wakeBtn) {
+                wakeBtn.addEventListener('click', () => {
+                    if (this.voiceAssistant) {
+                        this.voiceAssistant.wake();
+                    } else {
+                        this.showToast('Voice assistant not available');
+                    }
+                });
+            }
         }
     }
 

@@ -116,6 +116,20 @@ class VoiceAssistant {
         if (this.listening) this.stop(); else this.start();
     }
 
+    // Programmatically trigger the wake flow (useful for a button)
+    async wake() {
+        try {
+            // If wake recognizer is running, temporarily stop it to avoid interference
+            try { if (this.wakeRec && this.listening) this.wakeRec.stop(); } catch (e) {}
+            await this.onWake();
+        } catch (e) {
+            console.error('VoiceAssistant wake() failed', e);
+            this._showTransientNotice('Could not wake assistant');
+        } finally {
+            try { if (this.wakeRec && this.listening) this.wakeRec.start(); } catch (e) {}
+        }
+    }
+
     _setButtonActive(active) {
         const btn = document.getElementById('voice-toggle');
         if (!btn) return;
