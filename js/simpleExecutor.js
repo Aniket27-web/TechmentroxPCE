@@ -539,19 +539,27 @@ with output_capture:
 
     async loadPyodide() {
         if (window.pyodide) return;
-        
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js';
+            script.type = 'text/javascript';
+            script.async = true;
+            script.crossOrigin = 'anonymous';
+            const version = '0.24.1';
+            const base = `https://cdn.jsdelivr.net/pyodide/v${version}/full/`;
+            script.src = base + 'pyodide.js';
             script.onload = async () => {
                 try {
-                    window.pyodide = await loadPyodide();
+                    // Use the global window.loadPyodide and provide indexURL explicitly
+                    if (typeof window.loadPyodide !== 'function') {
+                        throw new Error('loadPyodide not available on window after script load');
+                    }
+                    window.pyodide = await window.loadPyodide({ indexURL: base });
                     resolve();
                 } catch (error) {
                     reject(error);
                 }
             };
-            script.onerror = reject;
+            script.onerror = (e) => reject(new Error('Failed to load Pyodide script'));
             document.head.appendChild(script);
         });
     }
