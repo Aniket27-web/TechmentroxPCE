@@ -25,9 +25,49 @@ class AIServiceGemini {
     }
 
     async makeRequest(endpoint, payload) {
+        // Simple in-memory cache to avoid repeating identical requests
+        if (!AIServiceGemini._cache) AIServiceGemini._cache = new Map();
+        const CACHE_SIZE = 64;
+
+        // Helper: simple djb2 hash for caching keys
+        const hashString = (s) => {
+            let h = 5381;
+            for (let i = 0; i < s.length; i++) h = ((h << 5) + h) + s.charCodeAt(i);
+            return String(h >>> 0);
+        };
+
+        // Truncate very large code payloads to keep requests small and faster
+        const getCodeSnippet = (code, maxChars = 3000) => {
+            if (!code || code.length <= maxChars) return code;
+            // Try to keep function/block around first occurrence of common keywords
+            const lines = code.split('\n');
+            // prefer returning selected top ~maxChars worth of lines
+            let accumulated = '';
+            for (let i = 0; i < lines.length; i++) {
+                accumulated += lines[i] + '\n';
+                if (accumulated.length >= maxChars) {
+                    // try to cut at the end of a function-like block
+                    return accumulated.trim() + '\n\n# ...code truncated for speed...';
+                }
+            }
+            return accumulated;
+        };
+
         // Prefer server-side proxy if available (avoids exposing API keys client-side)
         if (this.backendURL) {
             try {
+                // If payload contains large code, truncate it before sending to backend
+                if (payload && payload.code) payload.code = getCodeSnippet(payload.code, 3000);
+
+                const cacheKey = endpoint + '|' + hashString(JSON.stringify(payload || {}));
+                if (AIServiceGemini._cache.has(cacheKey)) {
+                    const val = AIServiceGemini._cache.get(cacheKey);
+                    // move to end to keep LRU-ish behavior
+                    AIServiceGemini._cache.delete(cacheKey);
+                    AIServiceGemini._cache.set(cacheKey, val);
+                    return val;
+                }
+
                 const resp = await fetch(this.backendURL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -39,7 +79,15 @@ class AIServiceGemini {
                     const msg = data?.error || `Backend error (${resp.status})`;
                     throw new Error(msg);
                 }
-                return data?.result || '';
+
+                const result = data?.result || '';
+                AIServiceGemini._cache.set(cacheKey, result);
+                // trim cache size
+                if (AIServiceGemini._cache.size > CACHE_SIZE) {
+                    const firstKey = AIServiceGemini._cache.keys().next().value;
+                    AIServiceGemini._cache.delete(firstKey);
+                }
+                return result;
             } catch (err) {
                 if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
                     throw new Error('Network error when contacting backend AI proxy.');
@@ -78,9 +126,10 @@ class AIServiceGemini {
                 throw new Error('Unknown AI endpoint');
         }
 
+        // Keep generation tokens smaller to reduce server-side processing time
         const body = JSON.stringify({
             contents: [ { role: 'user', parts: [{ text: prompt }] } ],
-            generationConfig: { temperature: 0.7, maxOutputTokens: 2000 }
+            generationConfig: { temperature: 0.7, maxOutputTokens: 800 }
         });
 
         let resp;
