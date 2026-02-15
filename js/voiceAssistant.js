@@ -4,24 +4,19 @@ class VoiceAssistant {
         this.editor = editor;
         this.actionManager = actionManager;
 
-        this.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        this.synth = window.speechSynthesis;
-
         this.recognition = null;
         this.isListening = false;
         this.isSpeaking = false;
-        this.isProcessing = false;
 
-        // 🔥 Persistent memory
         this.memory = {
             conversation: [],
-            projectFacts: [],
-            lastFile: null
+            architecture: []
         };
 
-        this.voiceNotice = document.getElementById('voice-notice');
-        this.voiceDebug = document.getElementById('voice-debug');
-        this.orb = document.getElementById('jarvis-orb');
+        this.personality = "serious";
+
+        this.noticeEl = document.getElementById("voice-notice");
+        this.panel = document.getElementById("jarvis-panel");
 
         this.init();
     }
@@ -29,174 +24,185 @@ class VoiceAssistant {
     /* ---------------- INIT ---------------- */
 
     init() {
-        if (!this.SpeechRecognition) {
-            console.warn("Speech recognition not supported");
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) {
+            console.warn("SpeechRecognition not supported");
             return;
         }
 
-        this.recognition = new this.SpeechRecognition();
+        this.recognition = new SR();
         this.recognition.continuous = true;
-        this.recognition.lang = "en-IN";
+        this.recognition.lang = "en-US";
         this.recognition.interimResults = false;
 
-        this.recognition.onresult = (e) => this.onSpeech(e);
+        this.recognition.onresult = e => this.onSpeech(e);
         this.recognition.onend = () => {
             if (this.isListening) {
                 try { this.recognition.start(); } catch {}
             }
         };
 
-        // 🔥 Auto detect runtime errors
-        window.addEventListener("error", (e) => {
-            this.speak("Alert. Code error detect hua hai.");
+        // runtime error detection
+        window.addEventListener("error", err => {
+            this.speak("I detected a runtime error.");
+            this.autoFix(err.message);
         });
 
-        this.debug("Jarvis God Mode Initialized");
+        // auto explain after typing stops
+        if (this.editor?.onDidChangeModelContent) {
+            let t;
+            this.editor.onDidChangeModelContent(() => {
+                clearTimeout(t);
+                t = setTimeout(() => this.autoExplain(), 2500);
+            });
+        }
+
+        console.log("Jarvis ready");
     }
 
     /* ---------------- CONTROL ---------------- */
 
     start() {
-        if (this.isListening) return;
+        if (this.isListening || !this.recognition) return;
         this.isListening = true;
         this.recognition.start();
-        this.notice("Jarvis Active");
-        this.animateOrb(true);
-        this.speak("Hello. Jarvis online. Ready when you are.");
+        this.notice("Jarvis listening");
+        this.speak("Jarvis online.");
     }
 
     stop() {
         this.isListening = false;
         try { this.recognition.stop(); } catch {}
-        this.animateOrb(false);
-        this.speak("Going offline.");
+        this.speak("Jarvis offline.");
+    }
+
+    toggle() {
+        this.isListening ? this.stop() : this.start();
     }
 
     /* ---------------- SPEECH INPUT ---------------- */
 
     async onSpeech(event) {
-        const last = event.results.length - 1;
-        const text = event.results[last][0].transcript.trim();
+        const text = event.results[event.results.length - 1][0].transcript.trim();
         if (!text) return;
 
-        this.debug("User: " + text);
+        if (this.isSpeaking) speechSynthesis.cancel();
 
-        // interrupt speech
-        if (this.isSpeaking) {
-            this.synth.cancel();
-            this.isSpeaking = false;
-        }
+        // personality switch
+        if (/friendly mode/i.test(text)) return this.setPersonality("friendly");
+        if (/hacker mode/i.test(text)) return this.setPersonality("hacker");
+        if (/serious mode/i.test(text)) return this.setPersonality("serious");
 
-        await this.processConversation(text);
+        await this.askAI(text);
     }
 
-    /* ---------------- CONVERSATION ENGINE ---------------- */
+    /* ---------------- PERSONALITY ---------------- */
 
-    async processConversation(userText) {
+    setPersonality(mode) {
+        this.personality = mode;
+        this.speak("Personality switched to " + mode);
+    }
 
-        // store memory
-        this.memory.conversation.push({ role: "user", content: userText });
+    personalityPrompt() {
+        return {
+            serious: "You are a professional AI assistant.",
+            hacker: "You are a sharp technical AI assistant.",
+            friendly: "You are a friendly helpful AI assistant."
+        }[this.personality];
+    }
 
-        const code = this.editor.getValue?.() || "";
-        const language = this.editor.currentLanguage || "unknown";
+    /* ---------------- AI CONVERSATION ---------------- */
 
-        // detect emotion tone
-        const tone = /urgent|jaldi|fast|quick/i.test(userText)
-            ? "urgent"
-            : "calm";
+    async askAI(text) {
+        this.memory.conversation.push(text);
 
-        this.speak(tone === "urgent" ? "Working on it immediately." : "Let me check.");
-
-        const context = this.memory.conversation.slice(-6)
-            .map(m => `${m.role}: ${m.content}`).join("\n");
-
-        const projectFacts = this.memory.projectFacts.join("\n");
+        const code = this.editor?.getValue?.() || "";
 
         const prompt = `
-You are Jarvis from Iron Man.
-Speak like a calm, intelligent assistant in Hinglish.
+${this.personalityPrompt()}
+Explain clearly and briefly.
 
-Tone: ${tone}
-
-Project facts:
-${projectFacts}
-
-Conversation:
-${context}
-
-Current code:
+User: ${text}
+Code:
 ${code}
-
-User: ${userText}
 `;
 
         try {
-            const response = await this.aiService.customPrompt(prompt, code, language);
+            const res = await this.aiService.customPrompt(prompt, code, this.editor.currentLanguage);
+            this.actionManager.displayResponse?.(res);
 
-            this.memory.conversation.push({ role: "assistant", content: response });
+            const clean = res.replace(/```[\s\S]*?```/g, "");
+            this.speak(clean.slice(0,250));
 
-            // store project info automatically
-            if (/this project|we are building|app uses/i.test(response)) {
-                this.memory.projectFacts.push(response.slice(0,200));
+            // architecture learning
+            if (/function|class|module|api/i.test(res)) {
+                this.memory.architecture.push(res.slice(0,120));
+                this.updatePanel();
             }
 
-            this.actionManager.displayResponse?.(response);
+        } catch {
+            this.speak("I couldn't process that.");
+        }
+    }
 
-            const plain = response.replace(/```[\s\S]*?```/g, "");
-            this.speak(plain.slice(0, 320));
+    /* ---------------- AUTO EXPLAIN ---------------- */
 
-        } catch (err) {
-            console.error(err);
-            this.speak("Something went wrong. Please check the system.");
+    async autoExplain() {
+        const code = this.editor?.getValue?.();
+        if (!code || code.length < 30) return;
+
+        const res = await this.aiService.customPrompt(
+            "Explain this code briefly.",
+            code,
+            this.editor.currentLanguage
+        );
+
+        const clean = res.replace(/```[\s\S]*?```/g, "");
+        this.speak(clean.slice(0,180));
+    }
+
+    /* ---------------- AUTO BUG FIX ---------------- */
+
+    async autoFix(errorMsg) {
+        const code = this.editor?.getValue?.();
+        if (!code) return;
+
+        const res = await this.aiService.customPrompt(
+            "Fix this error and return corrected code only:\n" + errorMsg,
+            code,
+            this.editor.currentLanguage
+        );
+
+        if (/```/.test(res)) {
+            const fixed = res.replace(/```[\w]*|```/g, "");
+            this.editor.setValue(fixed);
+            this.speak("I fixed the issue.");
         }
     }
 
     /* ---------------- SPEECH OUTPUT ---------------- */
 
     speak(text) {
-        if (!this.synth || !text) return;
-
-        const utter = new SpeechSynthesisUtterance(text);
-
-        // Jarvis tone
-        utter.rate = 0.9;
-        utter.pitch = 0.8;
-        utter.volume = 1;
-
-        const voices = this.synth.getVoices();
-        let voice =
-            voices.find(v => /en-GB/i.test(v.lang)) ||
-            voices.find(v => /en-IN/i.test(v.lang)) ||
-            voices[0];
-
-        if (voice) utter.voice = voice;
-
-        this.synth.cancel();
-        this.synth.speak(utter);
-
+        if (!text) return;
+        const u = new SpeechSynthesisUtterance(text);
+        speechSynthesis.cancel();
+        speechSynthesis.speak(u);
         this.isSpeaking = true;
-        utter.onend = () => this.isSpeaking = false;
+        u.onend = () => this.isSpeaking = false;
     }
 
-    /* ---------------- UI HELPERS ---------------- */
+    /* ---------------- UI ---------------- */
 
-    animateOrb(active) {
-        if (!this.orb) return;
-        this.orb.classList.toggle("active", active);
+    notice(msg) {
+        if (!this.noticeEl) return;
+        this.noticeEl.innerText = msg;
     }
 
-    notice(text) {
-        if (!this.voiceNotice) return;
-        this.voiceNotice.innerText = text;
-        this.voiceNotice.classList.add("active");
-        setTimeout(() => this.voiceNotice.classList.remove("active"), 3000);
-    }
-
-    debug(msg) {
-        if (!this.voiceDebug) return;
-        const line = document.createElement("div");
-        line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-        this.voiceDebug.prepend(line);
+    updatePanel() {
+        if (!this.panel) return;
+        this.panel.innerHTML =
+            "<b>Project Architecture</b><br>" +
+            this.memory.architecture.map(x => "• " + x).join("<br>");
     }
 }
 
